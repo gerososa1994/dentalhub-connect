@@ -1,4 +1,4 @@
-import { Calendar, Home, Users, FileText, Settings } from "lucide-react";
+import { Calendar, Home, Users, FileText, Settings, Building2 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,7 @@ const menuItems = [
   { icon: Users, label: "Pacientes", path: "/patients" },
   { icon: Calendar, label: "Citas", path: "/appointments" },
   { icon: FileText, label: "Historiales", path: "/records" },
+  { icon: Building2, label: "Clínicas", path: "/clinics" },
   { icon: Settings, label: "Configuración", path: "/settings" },
 ];
 
