@@ -13,12 +13,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface UserData {
+  role: string;
+  assignedClinicId?: string;
+}
+
 export default function Clinics() {
   const { toast } = useToast();
   const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
 
   // Fetch user role and assigned clinics
-  const { data: userData } = useQuery({
+  const { data: userData } = useQuery<UserData>({
     queryKey: ["currentUser"],
     queryFn: async () => {
       console.log("Fetching current user data...");
@@ -42,7 +47,10 @@ export default function Clinics() {
           .single();
 
         if (staffError) throw staffError;
-        return { ...userDetails, assignedClinicId: staffData?.clinic_id };
+        return { 
+          ...userDetails, 
+          assignedClinicId: staffData?.clinic_id 
+        };
       }
 
       return userDetails;
