@@ -49,9 +49,17 @@ export const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) =>
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Asegurarnos de que los campos requeridos estén presentes
+      const clinicData = {
+        name: values.name,
+        address: values.address,
+        phone: values.phone,
+        email: values.email || null, // Convertir string vacío a null
+      };
+
       const { error } = await supabase
         .from("clinics")
-        .insert([values]);
+        .insert(clinicData);
 
       if (error) throw error;
 
