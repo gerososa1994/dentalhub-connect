@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -16,22 +16,38 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
 
 const authSchema = z.object({
   email: z.string().email("Ingrese un email válido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   fullName: z.string().optional(),
+  clinicId: z.string().optional(),
 });
 
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Fetch clinics for the dropdown
+  const { data: clinics } = useQuery({
+    queryKey: ["clinics"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clinics")
+        .select("id, name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const loginForm = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
     defaultValues: {
       email: "",
       password: "",
+      clinicId: "",
     },
   });
 
@@ -41,6 +57,7 @@ export default function Auth() {
       email: "",
       password: "",
       fullName: "",
+      clinicId: "",
     },
   });
 
@@ -52,6 +69,11 @@ export default function Auth() {
       });
 
       if (error) throw error;
+
+      // If clinic is selected, store it in local storage
+      if (values.clinicId) {
+        localStorage.setItem('selectedClinicId', values.clinicId);
+      }
 
       toast({
         title: "¡Bienvenido!",
@@ -75,6 +97,7 @@ export default function Auth() {
         options: {
           data: {
             full_name: values.fullName,
+            clinic_id: values.clinicId,
           },
         },
       });
@@ -147,6 +170,31 @@ export default function Auth() {
                   )}
                 />
 
+                <FormField
+                  control={loginForm.control}
+                  name="clinicId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Clínica</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona una clínica" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {clinics?.map((clinic) => (
+                            <SelectItem key={clinic.id} value={clinic.id}>
+                              {clinic.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <Button type="submit" className="w-full">
                   Iniciar Sesión
                 </Button>
@@ -201,6 +249,31 @@ export default function Auth() {
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={registerForm.control}
+                  name="clinicId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Clínica</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona una clínica" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {clinics?.map((clinic) => (
+                            <SelectItem key={clinic.id} value={clinic.id}>
+                              {clinic.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
