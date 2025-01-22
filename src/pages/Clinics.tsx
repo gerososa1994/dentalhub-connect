@@ -6,11 +6,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { ClinicSelector } from "@/components/clinics/ClinicSelector";
 import { ClinicCard } from "@/components/clinics/ClinicCard";
 import { useClinicData } from "@/hooks/useClinicData";
+import { AddClinicDialog } from "@/components/clinics/AddClinicDialog";
 
 export default function Clinics() {
   const { toast } = useToast();
   const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
   const { clinics, isLoading, isAdmin } = useClinicData();
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   const handleEdit = (id: string) => {
     // TODO: Implementar edición de clínica
@@ -47,7 +49,7 @@ export default function Clinics() {
             </p>
           </div>
           {isAdmin && (
-            <Button>
+            <Button onClick={() => setShowAddDialog(true)}>
               <Plus className="mr-2 h-4 w-4" /> Nueva Clínica
             </Button>
           )}
@@ -73,6 +75,11 @@ export default function Clinics() {
           ))}
         </div>
       </div>
+
+      <AddClinicDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog}
+      />
     </DashboardLayout>
   );
 }

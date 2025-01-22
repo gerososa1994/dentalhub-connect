@@ -1,4 +1,4 @@
-import { Bell, Settings, User, LogOut, Lock } from "lucide-react";
+import { Bell, User, LogOut, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,10 +11,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 
 export const Header = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   // Fetch current user data
   const { data: userData } = useQuery({
@@ -50,30 +53,6 @@ export const Header = () => {
     }
   };
 
-  const handlePasswordChange = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) throw new Error("No email found");
-
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Email enviado",
-        description: "Revisa tu correo para cambiar tu contraseña",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo iniciar el cambio de contraseña",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <header className="border-b bg-white shadow-sm">
       <div className="container flex h-16 items-center justify-between px-4">
@@ -97,7 +76,7 @@ export const Header = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handlePasswordChange}>
+              <DropdownMenuItem onClick={() => setShowPasswordDialog(true)}>
                 <Lock className="mr-2 h-4 w-4" />
                 Cambiar contraseña
               </DropdownMenuItem>
@@ -110,6 +89,11 @@ export const Header = () => {
           </DropdownMenu>
         </div>
       </div>
+
+      <ChangePasswordDialog 
+        open={showPasswordDialog} 
+        onOpenChange={setShowPasswordDialog} 
+      />
     </header>
   );
 };
