@@ -46,6 +46,9 @@ export function AddPatientDialog() {
         throw new Error("No user data returned");
       }
 
+      // Wait a moment for the trigger to create the user record
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Check if user was created successfully using maybeSingle()
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -61,6 +64,17 @@ export function AddPatientDialog() {
       if (!userData) {
         console.error("User not found after creation");
         throw new Error("User not found after creation");
+      }
+
+      // Update the user's phone number
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ phone: data.phone })
+        .eq('id', authData.user.id);
+
+      if (updateError) {
+        console.error("Error updating user phone:", updateError);
+        throw updateError;
       }
 
       toast({

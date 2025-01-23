@@ -13,7 +13,7 @@ const Patients = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  const { data: patients, isLoading, error } = useQuery({
+  const { data: patients = [], isLoading, error } = useQuery({
     queryKey: ["patients"],
     queryFn: async () => {
       console.log("Fetching patients data...");
