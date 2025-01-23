@@ -18,9 +18,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Clinics() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
   const { clinics, isLoading, isAdmin } = useClinicData();
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -46,6 +48,7 @@ export default function Clinics() {
         title: "Clínica eliminada",
         description: "La clínica ha sido eliminada exitosamente",
       });
+      queryClient.invalidateQueries({ queryKey: ["clinics"] });
       setShowDeleteDialog(false);
       setClinicToDelete(null);
     } catch (error) {
@@ -88,10 +91,12 @@ export default function Clinics() {
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={() => {
-              setEditingClinic(null);
-              setShowAddDialog(true);
-            }}>
+            <Button 
+              onClick={() => {
+                setEditingClinic(null);
+                setShowAddDialog(true);
+              }}
+            >
               <Plus className="mr-2 h-4 w-4" /> Nueva Clínica
             </Button>
           )}
