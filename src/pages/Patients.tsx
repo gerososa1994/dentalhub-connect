@@ -4,9 +4,10 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, User, Calendar, Phone } from "lucide-react";
+import { Search, User, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AddPatientDialog } from "@/components/patients/AddPatientDialog";
 
 const Patients = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,10 +60,7 @@ const Patients = () => {
               Gestiona la información de tus pacientes
             </p>
           </div>
-          <Button className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Nuevo Paciente
-          </Button>
+          <AddPatientDialog />
         </div>
 
         <Card className="p-6">
