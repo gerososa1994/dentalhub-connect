@@ -26,14 +26,12 @@ export function AddPatientDialog() {
       // First create the user
       const { data: userData, error: userError } = await supabase
         .from("users")
-        .insert([
-          {
-            email: data.email,
-            full_name: data.full_name,
-            phone: data.phone,
-            role: "patient"
-          }
-        ])
+        .insert({
+          email: data.email,
+          full_name: data.full_name,
+          phone: data.phone,
+          role: "patient"
+        })
         .select()
         .single();
 
