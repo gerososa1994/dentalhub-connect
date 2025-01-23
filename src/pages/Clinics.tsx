@@ -7,21 +7,60 @@ import { ClinicSelector } from "@/components/clinics/ClinicSelector";
 import { ClinicCard } from "@/components/clinics/ClinicCard";
 import { useClinicData } from "@/hooks/useClinicData";
 import { AddClinicDialog } from "@/components/clinics/AddClinicDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Clinics() {
   const { toast } = useToast();
   const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
   const { clinics, isLoading, isAdmin } = useClinicData();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [clinicToDelete, setClinicToDelete] = useState<string | null>(null);
+  const [editingClinic, setEditingClinic] = useState<string | null>(null);
 
   const handleEdit = (id: string) => {
-    // TODO: Implementar edición de clínica
-    console.log("Editar clínica:", id);
+    setEditingClinic(id);
+    setShowAddDialog(true);
   };
 
-  const handleDelete = (id: string) => {
-    // TODO: Implementar eliminación de clínica
-    console.log("Eliminar clínica:", id);
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("clinics")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Clínica eliminada",
+        description: "La clínica ha sido eliminada exitosamente",
+      });
+      setShowDeleteDialog(false);
+      setClinicToDelete(null);
+    } catch (error) {
+      console.error("Error deleting clinic:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la clínica",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmDelete = (id: string) => {
+    setClinicToDelete(id);
+    setShowDeleteDialog(true);
   };
 
   if (isLoading) {
@@ -49,7 +88,10 @@ export default function Clinics() {
             </p>
           </div>
           {isAdmin && (
-            <Button onClick={() => setShowAddDialog(true)}>
+            <Button onClick={() => {
+              setEditingClinic(null);
+              setShowAddDialog(true);
+            }}>
               <Plus className="mr-2 h-4 w-4" /> Nueva Clínica
             </Button>
           )}
@@ -70,7 +112,7 @@ export default function Clinics() {
               {...clinic}
               isAdmin={isAdmin}
               onEdit={handleEdit}
-              onDelete={handleDelete}
+              onDelete={confirmDelete}
             />
           ))}
         </div>
@@ -79,7 +121,29 @@ export default function Clinics() {
       <AddClinicDialog 
         open={showAddDialog} 
         onOpenChange={setShowAddDialog}
+        clinicId={editingClinic}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la clínica
+              y todos sus datos asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => clinicToDelete && handleDelete(clinicToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

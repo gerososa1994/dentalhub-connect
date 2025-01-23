@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,9 +32,10 @@ const formSchema = z.object({
 interface AddClinicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  clinicId?: string | null;
 }
 
-export const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) => {
+export const AddClinicDialog = ({ open, onOpenChange, clinicId }: AddClinicDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,34 +48,82 @@ export const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) =>
     },
   });
 
+  useEffect(() => {
+    const loadClinicData = async () => {
+      if (clinicId) {
+        const { data, error } = await supabase
+          .from("clinics")
+          .select("*")
+          .eq("id", clinicId)
+          .single();
+
+        if (error) {
+          console.error("Error loading clinic:", error);
+          return;
+        }
+
+        if (data) {
+          form.reset({
+            name: data.name,
+            address: data.address,
+            phone: data.phone,
+            email: data.email || "",
+          });
+        }
+      } else {
+        form.reset({
+          name: "",
+          address: "",
+          phone: "",
+          email: "",
+        });
+      }
+    };
+
+    loadClinicData();
+  }, [clinicId, form]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Asegurarnos de que los campos requeridos estén presentes
       const clinicData = {
         name: values.name,
         address: values.address,
         phone: values.phone,
-        email: values.email || null, // Convertir string vacío a null
+        email: values.email || null,
       };
 
-      const { error } = await supabase
-        .from("clinics")
-        .insert(clinicData);
+      let error;
+      if (clinicId) {
+        // Update existing clinic
+        ({ error } = await supabase
+          .from("clinics")
+          .update(clinicData)
+          .eq("id", clinicId));
+      } else {
+        // Create new clinic
+        ({ error } = await supabase
+          .from("clinics")
+          .insert(clinicData));
+      }
 
       if (error) throw error;
 
       toast({
-        title: "Clínica agregada",
-        description: "La clínica ha sido agregada exitosamente",
+        title: clinicId ? "Clínica actualizada" : "Clínica agregada",
+        description: clinicId 
+          ? "La clínica ha sido actualizada exitosamente"
+          : "La clínica ha sido agregada exitosamente",
       });
       queryClient.invalidateQueries({ queryKey: ["clinics"] });
       onOpenChange(false);
       form.reset();
     } catch (error) {
-      console.error("Error adding clinic:", error);
+      console.error("Error saving clinic:", error);
       toast({
         title: "Error",
-        description: "No se pudo agregar la clínica",
+        description: clinicId 
+          ? "No se pudo actualizar la clínica"
+          : "No se pudo agregar la clínica",
         variant: "destructive",
       });
     }
@@ -84,7 +133,9 @@ export const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) =>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Agregar clínica</DialogTitle>
+          <DialogTitle>
+            {clinicId ? "Editar clínica" : "Agregar clínica"}
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -141,7 +192,7 @@ export const AddClinicDialog = ({ open, onOpenChange }: AddClinicDialogProps) =>
               )}
             />
             <Button type="submit" className="w-full">
-              Agregar clínica
+              {clinicId ? "Actualizar clínica" : "Agregar clínica"}
             </Button>
           </form>
         </Form>
