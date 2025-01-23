@@ -73,6 +73,10 @@ export default function Clinics() {
     );
   }
 
+  const filteredClinics = selectedClinic
+    ? clinics?.filter((clinic) => clinic.id === selectedClinic)
+    : clinics;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
