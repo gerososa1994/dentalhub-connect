@@ -35,12 +35,34 @@ export function AddPatientDialog() {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
+      }
       console.log("Auth user created:", authData);
 
-      if (!authData.user) throw new Error("No user data returned");
+      if (!authData.user) {
+        console.error("No user data returned");
+        throw new Error("No user data returned");
+      }
 
-      // The trigger will automatically create the user and patient records
+      // Check if user was created successfully using maybeSingle()
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error("Error fetching user:", userError);
+        throw userError;
+      }
+
+      if (!userData) {
+        console.error("User not found after creation");
+        throw new Error("User not found after creation");
+      }
+
       toast({
         title: "Éxito",
         description: "Paciente creado correctamente",
