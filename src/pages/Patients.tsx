@@ -39,7 +39,7 @@ const Patients = () => {
       }
 
       console.log("Patients data received:", data);
-      return data;
+      return data || []; // Ensure we always return an array
     },
   });
 
