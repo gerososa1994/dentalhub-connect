@@ -23,32 +23,24 @@ export function AddPatientDialog() {
     try {
       console.log("Creating new patient with data:", data);
       
-      // First create the user
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .insert({
-          email: data.email,
-          full_name: data.full_name,
-          phone: data.phone,
-          role: "patient"
-        })
-        .select()
-        .single();
-
-      if (userError) throw userError;
-      console.log("User created:", userData);
-
-      // Then create the patient record
-      const { error: patientError } = await supabase
-        .from("patients")
-        .insert([
-          {
-            user_id: userData.id
+      // First create the auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: "temporary-password", // You should implement a proper password handling
+        options: {
+          data: {
+            full_name: data.full_name,
+            role: 'patient'
           }
-        ]);
+        }
+      });
 
-      if (patientError) throw patientError;
+      if (authError) throw authError;
+      console.log("Auth user created:", authData);
 
+      if (!authData.user) throw new Error("No user data returned");
+
+      // The trigger will automatically create the user and patient records
       toast({
         title: "Éxito",
         description: "Paciente creado correctamente",
